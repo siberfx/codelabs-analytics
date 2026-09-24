@@ -1,8 +1,8 @@
 # CodeLabs Analytics for Laravel
 
-[![Tests](https://github.com/siberfx/codelab-stats/actions/workflows/tests.yml/badge.svg)](https://github.com/siberfx/codelab-stats/actions/workflows/tests.yml)
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/siberfx/codelab-stats.svg)](https://packagist.org/packages/siberfx/codelab-stats)
-[![License](https://img.shields.io/packagist/l/siberfx/codelab-stats.svg)](LICENSE)
+[![Tests](https://github.com/siberfx/codelabs-stats/actions/workflows/tests.yml/badge.svg)](https://github.com/siberfx/codelabs-stats/actions/workflows/tests.yml)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/siberfx/codelabs-stats.svg)](https://packagist.org/packages/siberfx/codelabs-stats)
+[![License](https://img.shields.io/packagist/l/siberfx/codelabs-stats.svg)](LICENSE)
 
 A small Laravel client for [CodeLabs Analytics](https://analytics.code-labs.nl). It reads your site's
 statistics with caching, builds a one-call dashboard summary, and can optionally expose read-only
