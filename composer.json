@@ -2,7 +2,7 @@
     "name": "siberfx/codelab-stats",
     "description": "Laravel client for CodeLabs Analytics (analytics.code-labs.nl): cached stats, a dashboard summary and optional JSON proxy routes.",
     "keywords": ["laravel", "analytics", "codelabs", "code-labs", "statistics", "privacy-analytics"],
-    "homepage": "https://github.com/siberfx/codelab-stats",
+    "homepage": "https://github.com/siberfx/codelabs-analytics",
     "license": "MIT",
     "type": "library",
     "authors": [
