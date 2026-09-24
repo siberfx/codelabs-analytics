@@ -30,17 +30,45 @@ describe('when enabled', function () {
     it('forwards only known stats parameters', function () {
         Http::fake([API.'/*' => mockResponse('stats-empty')]);
 
-        $this->getJson('/codelab-stats/stats?name=page&from=2026-09-01&to=2026-09-02&per_page=20&evil=1')
+        $this->getJson('/codelab-stats/stats?name=page&from=2026-09-01&to=2026-09-02&per_page=25&evil=1')
             ->assertOk()
             ->assertExactJson(mockBody('stats-empty'));
 
-        Http::assertSent(fn (Request $request) => (int) $request['per_page'] === 20 && ! isset($request['evil']));
+        Http::assertSent(fn (Request $request) => (int) $request['per_page'] === 25 && ! isset($request['evil']));
     });
 
     it('validates the date range', function () {
         $this->getJson('/codelab-stats/stats?name=page&from=2026-09-05&to=2026-09-01')
             ->assertUnprocessable()
             ->assertJsonValidationErrors('to');
+    });
+
+    it('rejects unknown reports and option values before calling CodeLabs', function (string $query, string $field) {
+        Http::fake();
+
+        $this->getJson("/codelab-stats/stats?from=2026-09-01&to=2026-09-02&{$query}")
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors($field);
+
+        Http::assertNothingSent();
+    })->with([
+        ['name=bogus', 'name'],
+        ['name=page&search_by=domain', 'search_by'],
+        ['name=page&sort_by=date', 'sort_by'],
+        ['name=page&sort=up', 'sort'],
+        ['name=page&per_page=20', 'per_page'],
+        ['name=page&page=0', 'page'],
+    ]);
+
+    it('forwards every documented option', function () {
+        Http::fake([API.'/*' => mockResponse('stats-empty')]);
+
+        $this->getJson('/codelab-stats/stats?name=screen_resolution&from=2026-09-01&to=2026-09-02'
+            .'&search=1920&search_by=value&sort_by=value&sort=asc&per_page=100&page=2')
+            ->assertOk();
+
+        Http::assertSent(fn (Request $request) => $request->url() === API.'/stats/13?name=screen_resolution'
+            .'&from=2026-09-01&to=2026-09-02&search=1920&search_by=value&sort_by=value&sort=asc&per_page=100&page=2');
     });
 
     it('answers a rejected key with 502, not 401', function () {
@@ -65,7 +93,7 @@ describe('when enabled', function () {
     it('surfaces the first validation message from CodeLabs', function () {
         Http::fake([API.'/*' => mockResponse('error-validation', 422)]);
 
-        $this->getJson('/codelab-stats/stats?name=bogus&from=2026-09-01&to=2026-09-02')
+        $this->getJson('/codelab-stats/stats?name=page&from=2026-09-01&to=2026-09-02')
             ->assertStatus(502)
             ->assertJsonPath('message', 'CodeLabs Analytics rejected the request: The selected name is invalid.');
     });

@@ -3,6 +3,20 @@
 All notable changes to `siberfx/codelab-stats` are documented here.
 This project follows [Semantic Versioning](https://semver.org).
 
+## [1.2.0] - 2026-09-24
+
+### Added
+
+- `Report` enum with all 14 reports: `browser`, `campaign`, `city`, `continent`, `country`, `device`, `event`, `language`, `operating_system`, `page`, `pageview`, `referrer`, `screen_resolution` and `visitor`. It also includes the allowed option values (`SEARCH_BY`, `SORT_BY`, `SORT`, `PER_PAGE`).
+- `stats()` accepts a `Report` case as well as a string.
+- One shortcut per report: `browsers()`, `campaigns()`, `cities()`, `continents()`, `countries()`, `devices()`, `events()`, `languages()`, `operatingSystems()`, `pages()`, `pageviews()`, `referrers()`, `screenResolutions()`, `visitors()`.
+- `codelab-stats:stats {name}` Artisan command with `--from`, `--to`, `--website`, `--search`, `--sort-by`, `--sort` and `--per-page`.
+
+### Changed
+
+- The stats route validates `name`, `search_by`, `sort_by`, `sort`, `per_page` and `page` against the values the API accepts. Invalid input now gets a local **422** instead of a **502** carrying CodeLabs' validation error. This also rejects page sizes other than 10, 25, 50 and 100.
+- `illuminate/validation` is now a declared dependency. The routes already used it.
+
 ## [1.1.0] - 2026-09-24
 
 ### Changed

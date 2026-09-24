@@ -8,8 +8,11 @@ use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Arr;
+use Illuminate\Validation\Rule;
 use Siberfx\CodelabStats\CodelabStats;
 use Siberfx\CodelabStats\Exceptions\MissingConfiguration;
+use Siberfx\CodelabStats\Report;
 
 /**
  * Read-only JSON endpoints for a dashboard.
@@ -36,17 +39,24 @@ class StatsController extends Controller
 
     public function stats(Request $request, CodelabStats $client): JsonResponse
     {
+        // Mirrors the API's own rules, so bad input is a local 422 rather than a 502 from CodeLabs.
         $input = $request->validate([
-            'name' => ['required', 'string', 'max:50'],
+            'name' => ['required', Rule::enum(Report::class)],
             'from' => ['required', 'date_format:Y-m-d'],
             'to' => ['required', 'date_format:Y-m-d', 'after_or_equal:from'],
+            'search' => ['sometimes', 'string', 'max:255'],
+            'search_by' => ['sometimes', Rule::in(Report::SEARCH_BY)],
+            'sort_by' => ['sometimes', Rule::in(Report::SORT_BY)],
+            'sort' => ['sometimes', Rule::in(Report::SORT)],
+            'per_page' => ['sometimes', 'integer', Rule::in(Report::PER_PAGE)],
+            'page' => ['sometimes', 'integer', 'min:1'],
         ]);
 
         return $this->proxy($client, fn () => $client->stats(
             $input['name'],
             $input['from'],
             $input['to'],
-            $request->only(self::FORWARDED),
+            Arr::only($input, self::FORWARDED),
         ));
     }
 

@@ -11,7 +11,7 @@ JSON routes for a front-end dashboard.
 - Pageviews, visitors, countries, pages, devices, referrers and every other report the API offers
 - Smart caching: ranges that end today refresh every 30 seconds; past ranges are cached for 5 minutes
 - Failed requests throw and are never cached
-- `php artisan codelab-stats:websites` to find your website ID
+- `php artisan codelab-stats:websites` to find your website ID, `php artisan codelab-stats:stats` to check any report
 - Laravel 12 and 13, PHP 8.3+
 
 ## Installation
@@ -83,8 +83,67 @@ $pages = CodelabStats::stats('page', '2026-09-01', '2026-09-30', [
 $pages['data']; // [['value' => '/pricing', 'count' => 84], ...]
 ```
 
-The response body is returned as-is. Useful report names include `pageview`, `visitor`, `country`,
-`page`, `device` and `referrer`; see the CodeLabs Analytics API docs for the full list and parameters.
+The response body is returned as-is. The name can be a string or a `Report` case, and every report
+has a shortcut that takes the same arguments:
+
+| `Report` case      | Name                | Shortcut              |
+| ------------------ | ------------------- | --------------------- |
+| `Browser`          | `browser`           | `browsers()`          |
+| `Campaign`         | `campaign`          | `campaigns()`         |
+| `City`             | `city`              | `cities()`            |
+| `Continent`        | `continent`         | `continents()`        |
+| `Country`          | `country`           | `countries()`         |
+| `Device`           | `device`            | `devices()`           |
+| `Event`            | `event`             | `events()`            |
+| `Language`         | `language`          | `languages()`         |
+| `OperatingSystem`  | `operating_system`  | `operatingSystems()`  |
+| `Page`             | `page`              | `pages()`             |
+| `Pageview`         | `pageview`          | `pageviews()`         |
+| `Referrer`         | `referrer`          | `referrers()`         |
+| `ScreenResolution` | `screen_resolution` | `screenResolutions()` |
+| `Visitor`          | `visitor`           | `visitors()`          |
+
+```php
+use Siberfx\CodelabStats\Report;
+
+CodelabStats::stats(Report::OperatingSystem, '2026-09-01', '2026-09-30');
+CodelabStats::screenResolutions('2026-09-01', '2026-09-30', ['per_page' => 25]);
+CodelabStats::pages('2026-09-01', '2026-09-30', ['search' => '/blog', 'search_by' => 'value']);
+```
+
+Options accepted by the API:
+
+| Option      | Values                     | Default |
+| ----------- | -------------------------- | ------- |
+| `search`    | any text                   | —       |
+| `search_by` | `value`                    | —       |
+| `sort_by`   | `count`, `value`           | `count` |
+| `sort`      | `desc`, `asc`              | `desc`  |
+| `per_page`  | `10`, `25`, `50`, `100`    | `10`    |
+| `page`      | page number                | `1`     |
+
+These values are also available as `Report::SEARCH_BY`, `Report::SORT_BY`, `Report::SORT` and
+`Report::PER_PAGE`.
+
+### From the command line
+
+Check any report for a site without writing code:
+
+```bash
+php artisan codelab-stats:stats country                       # last 30 days, top 10
+php artisan codelab-stats:stats page --from=2026-09-01 --to=2026-09-30 --per-page=25
+php artisan codelab-stats:stats referrer --website=14 --search=google
+php artisan codelab-stats:stats pageview --sort-by=value --sort=asc --per-page=100
+```
+
+```
++-------+-------+
+| Value | Count |
++-------+-------+
+| NL    | 320   |
+| DE    | 112   |
++-------+-------+
+```
 
 ### Several websites
 
@@ -123,7 +182,8 @@ CODELAB_STATS_ROUTES=true
 | GET    | `/codelab-stats/stats?name=page&from=…&to=…&per_page=20` | one raw report      |
 
 The stats route forwards only `search`, `search_by`, `sort_by`, `sort`, `per_page` and `page`
-besides `name`, `from` and `to`.
+besides `name`, `from` and `to`. It checks them against the values in the table above. An unknown report or
+an unsupported value gets a normal Laravel **422** and never reaches CodeLabs.
 
 When CodeLabs fails, the routes answer **502** with a readable message and the API's own status and
 body, so your front end can show what went wrong:

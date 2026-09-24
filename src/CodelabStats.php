@@ -19,12 +19,12 @@ class CodelabStats
 {
     /** Metrics fetched by summary(), with the page size requested for each. */
     public const array SUMMARY_METRICS = [
-        'pageviews' => ['pageview', 100],
-        'visitors' => ['visitor', 100],
-        'countries' => ['country', 5],
-        'pages' => ['page', 5],
-        'devices' => ['device', 10],
-        'referrers' => ['referrer', 5],
+        'pageviews' => [Report::Pageview, 100],
+        'visitors' => [Report::Visitor, 100],
+        'countries' => [Report::Country, 5],
+        'pages' => [Report::Page, 5],
+        'devices' => [Report::Device, 10],
+        'referrers' => [Report::Referrer, 5],
     ];
 
     /**
@@ -70,17 +70,107 @@ class CodelabStats
     /**
      * One stats report for the configured website.
      *
-     * @param  string  $name  pageview, visitor, country, page, device, referrer, …
-     * @param  array<string, mixed>  $params  e.g. search, search_by, sort_by, sort, per_page, page
+     * @param  Report|string  $name  a Report, or its name (browser, page, operating_system, …)
+     * @param  array<string, mixed>  $params  search, search_by, sort_by, sort, per_page, page
      * @return array<string, mixed>
      *
      * @throws RequestException
      */
-    public function stats(string $name, DateTimeInterface|string $from, DateTimeInterface|string $to, array $params = []): array
+    public function stats(Report|string $name, DateTimeInterface|string $from, DateTimeInterface|string $to, array $params = []): array
     {
+        $name = $name instanceof Report ? $name->value : $name;
         $query = ['name' => $name, 'from' => $this->date($from), 'to' => $this->date($to)] + $params;
 
         return $this->remember("stats/{$this->websiteId()}", $query, $this->ttlFor($query['to']));
+    }
+
+    /**
+     * One shortcut per report; each takes the same arguments as stats() after the name.
+     *
+     * @param  array<string, mixed>  $params
+     * @return array<string, mixed>
+     */
+    public function browsers(DateTimeInterface|string $from, DateTimeInterface|string $to, array $params = []): array
+    {
+        return $this->stats(Report::Browser, $from, $to, $params);
+    }
+
+    /** @return array<string, mixed> */
+    public function campaigns(DateTimeInterface|string $from, DateTimeInterface|string $to, array $params = []): array
+    {
+        return $this->stats(Report::Campaign, $from, $to, $params);
+    }
+
+    /** @return array<string, mixed> */
+    public function cities(DateTimeInterface|string $from, DateTimeInterface|string $to, array $params = []): array
+    {
+        return $this->stats(Report::City, $from, $to, $params);
+    }
+
+    /** @return array<string, mixed> */
+    public function continents(DateTimeInterface|string $from, DateTimeInterface|string $to, array $params = []): array
+    {
+        return $this->stats(Report::Continent, $from, $to, $params);
+    }
+
+    /** @return array<string, mixed> */
+    public function countries(DateTimeInterface|string $from, DateTimeInterface|string $to, array $params = []): array
+    {
+        return $this->stats(Report::Country, $from, $to, $params);
+    }
+
+    /** @return array<string, mixed> */
+    public function devices(DateTimeInterface|string $from, DateTimeInterface|string $to, array $params = []): array
+    {
+        return $this->stats(Report::Device, $from, $to, $params);
+    }
+
+    /** @return array<string, mixed> */
+    public function events(DateTimeInterface|string $from, DateTimeInterface|string $to, array $params = []): array
+    {
+        return $this->stats(Report::Event, $from, $to, $params);
+    }
+
+    /** @return array<string, mixed> */
+    public function languages(DateTimeInterface|string $from, DateTimeInterface|string $to, array $params = []): array
+    {
+        return $this->stats(Report::Language, $from, $to, $params);
+    }
+
+    /** @return array<string, mixed> */
+    public function operatingSystems(DateTimeInterface|string $from, DateTimeInterface|string $to, array $params = []): array
+    {
+        return $this->stats(Report::OperatingSystem, $from, $to, $params);
+    }
+
+    /** @return array<string, mixed> */
+    public function pages(DateTimeInterface|string $from, DateTimeInterface|string $to, array $params = []): array
+    {
+        return $this->stats(Report::Page, $from, $to, $params);
+    }
+
+    /** @return array<string, mixed> */
+    public function pageviews(DateTimeInterface|string $from, DateTimeInterface|string $to, array $params = []): array
+    {
+        return $this->stats(Report::Pageview, $from, $to, $params);
+    }
+
+    /** @return array<string, mixed> */
+    public function referrers(DateTimeInterface|string $from, DateTimeInterface|string $to, array $params = []): array
+    {
+        return $this->stats(Report::Referrer, $from, $to, $params);
+    }
+
+    /** @return array<string, mixed> */
+    public function screenResolutions(DateTimeInterface|string $from, DateTimeInterface|string $to, array $params = []): array
+    {
+        return $this->stats(Report::ScreenResolution, $from, $to, $params);
+    }
+
+    /** @return array<string, mixed> */
+    public function visitors(DateTimeInterface|string $from, DateTimeInterface|string $to, array $params = []): array
+    {
+        return $this->stats(Report::Visitor, $from, $to, $params);
     }
 
     /**

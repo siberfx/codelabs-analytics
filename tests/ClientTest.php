@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Http;
 use Siberfx\CodelabStats\CodelabStats as Client;
 use Siberfx\CodelabStats\Exceptions\MissingConfiguration;
 use Siberfx\CodelabStats\Facades\CodelabStats;
+use Siberfx\CodelabStats\Report;
 
 beforeEach(fn () => Carbon::setTestNow('2026-09-24 12:00:00'));
 
@@ -128,4 +129,44 @@ it('fails clearly without a website id', function () {
 it('resolves the client from the container', function () {
     expect(app(Client::class))->toBeInstanceOf(Client::class)
         ->and(app(Client::class)->websiteId())->toBe('13');
+});
+
+it('accepts a Report case as the report name', function () {
+    Http::fake([API.'/*' => mockResponse('stats-empty')]);
+
+    CodelabStats::stats(Report::OperatingSystem, '2026-09-01', '2026-09-10');
+
+    Http::assertSent(fn (Request $request) => $request['name'] === 'operating_system');
+});
+
+it('has a shortcut for every report', function (string $method, string $name) {
+    Http::fake([API.'/*' => mockResponse('stats-empty')]);
+
+    expect(CodelabStats::{$method}('2026-09-01', '2026-09-10', ['sort_by' => 'value', 'sort' => 'asc']))
+        ->toBe(mockBody('stats-empty'));
+
+    Http::assertSent(fn (Request $request) => $request->url()
+        === API."/stats/13?name={$name}&from=2026-09-01&to=2026-09-10&sort_by=value&sort=asc");
+})->with([
+    ['browsers', 'browser'],
+    ['campaigns', 'campaign'],
+    ['cities', 'city'],
+    ['continents', 'continent'],
+    ['countries', 'country'],
+    ['devices', 'device'],
+    ['events', 'event'],
+    ['languages', 'language'],
+    ['operatingSystems', 'operating_system'],
+    ['pages', 'page'],
+    ['pageviews', 'pageview'],
+    ['referrers', 'referrer'],
+    ['screenResolutions', 'screen_resolution'],
+    ['visitors', 'visitor'],
+]);
+
+it('covers every report the API documents', function () {
+    expect(Report::names())->toBe([
+        'browser', 'campaign', 'city', 'continent', 'country', 'device', 'event',
+        'language', 'operating_system', 'page', 'pageview', 'referrer', 'screen_resolution', 'visitor',
+    ]);
 });

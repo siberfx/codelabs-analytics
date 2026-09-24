@@ -7,6 +7,7 @@ use Illuminate\Http\Client\Factory as HttpFactory;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Siberfx\CodelabStats\Console\ListWebsitesCommand;
+use Siberfx\CodelabStats\Console\StatsCommand;
 use Siberfx\CodelabStats\Http\Controllers\StatsController;
 
 class CodelabStatsServiceProvider extends ServiceProvider
@@ -30,7 +31,7 @@ class CodelabStatsServiceProvider extends ServiceProvider
                 __DIR__.'/../config/codelab-stats.php' => config_path('codelab-stats.php'),
             ], 'codelab-stats-config');
 
-            $this->commands([ListWebsitesCommand::class]);
+            $this->commands([ListWebsitesCommand::class, StatsCommand::class]);
         }
 
         $this->registerRoutes();
