@@ -3,15 +3,21 @@
 namespace Siberfx\CodelabStats\Http\Controllers;
 
 use Closure;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Siberfx\CodelabStats\CodelabStats;
+use Siberfx\CodelabStats\Exceptions\MissingConfiguration;
 
 /**
- * Read-only JSON endpoints for a dashboard. API errors are passed through
- * with their original status so the front end can show them.
+ * Read-only JSON endpoints for a dashboard.
+ *
+ * A failure on the CodeLabs side is answered with 502 (503 when the package
+ * is not configured), never with the API's own status: a 401 or 404 from
+ * CodeLabs would otherwise read as "your session expired" or "this route
+ * does not exist" to the front end calling these routes.
  */
 class StatsController extends Controller
 {
@@ -25,7 +31,7 @@ class StatsController extends Controller
             'to' => ['required', 'date_format:Y-m-d', 'after_or_equal:from'],
         ]);
 
-        return $this->proxy(fn () => $client->summary($range['from'], $range['to']));
+        return $this->proxy($client, fn () => $client->summary($range['from'], $range['to']));
     }
 
     public function stats(Request $request, CodelabStats $client): JsonResponse
@@ -36,7 +42,7 @@ class StatsController extends Controller
             'to' => ['required', 'date_format:Y-m-d', 'after_or_equal:from'],
         ]);
 
-        return $this->proxy(fn () => $client->stats(
+        return $this->proxy($client, fn () => $client->stats(
             $input['name'],
             $input['from'],
             $input['to'],
@@ -45,15 +51,40 @@ class StatsController extends Controller
     }
 
     /** @param  Closure(): array<string, mixed>  $call */
-    private function proxy(Closure $call): JsonResponse
+    private function proxy(CodelabStats $client, Closure $call): JsonResponse
     {
         try {
             return response()->json($call());
+        } catch (MissingConfiguration $e) {
+            return response()->json(['message' => $e->getMessage()], 503);
         } catch (RequestException $e) {
-            return response()->json(
-                $e->response->json() ?? ['message' => 'CodeLabs Analytics request failed.'],
-                $e->response->status(),
-            );
+            return response()->json([
+                'message' => $this->describe($client, $e),
+                'upstream_status' => $e->response->status(),
+                'upstream' => $e->response->json(),
+            ], 502);
+        } catch (ConnectionException) {
+            return response()->json(['message' => 'CodeLabs Analytics could not be reached.'], 502);
         }
+    }
+
+    private function describe(CodelabStats $client, RequestException $e): string
+    {
+        return match ($e->response->status()) {
+            401, 403 => 'CodeLabs Analytics rejected the API key.',
+            404 => "CodeLabs Analytics has no website {$client->websiteId()} for this API key.",
+            422 => 'CodeLabs Analytics rejected the request: '.$this->firstMessage($e->response->json('message')),
+            default => 'CodeLabs Analytics answered with status '.$e->response->status().'.',
+        };
+    }
+
+    /** The API sends either a string or a Laravel-style field => [messages] map. */
+    private function firstMessage(mixed $message): string
+    {
+        if (is_array($message)) {
+            $message = collect($message)->flatten()->first();
+        }
+
+        return is_string($message) && $message !== '' ? $message : 'invalid parameters.';
     }
 }

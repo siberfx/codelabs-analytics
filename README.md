@@ -123,7 +123,21 @@ CODELAB_STATS_ROUTES=true
 | GET    | `/codelab-stats/stats?name=page&from=…&to=…&per_page=20` | one raw report      |
 
 The stats route forwards only `search`, `search_by`, `sort_by`, `sort`, `per_page` and `page`
-besides `name`, `from` and `to`. API errors are passed through with their original status code.
+besides `name`, `from` and `to`.
+
+When CodeLabs fails, the routes answer **502** with a readable message and the API's own status and
+body, so your front end can show what went wrong:
+
+```json
+{
+    "message": "CodeLabs Analytics has no website 12 for this API key.",
+    "upstream_status": 404,
+    "upstream": { "message": "Resource not found.", "status": 404 }
+}
+```
+
+A missing key or website ID answers **503**. The API's own status is never passed through as the
+response status: a CodeLabs 401 would otherwise look like an expired session to your front end.
 
 **These routes expose your analytics.** They use the `web` and `auth` middleware by default; tighten
 that in `config/codelab-stats.php` (for example `['web', 'auth', 'can:view-analytics']`). You can
