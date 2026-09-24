@@ -1,0 +1,6 @@
+{
+    "data": [
+        {"id": 13, "domain": "example.com", "created_at": "2026-09-24T18:38:27.000000Z"},
+        {"id": 14, "domain": "shop.example.com", "created_at": "2026-09-20T09:12:00.000000Z"}
+    ]
+}
