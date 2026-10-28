@@ -12,7 +12,7 @@ JSON routes for a front-end dashboard.
 - Smart caching: ranges that end today refresh every 30 seconds; past ranges are cached for 5 minutes
 - Failed requests throw and are never cached
 - `php artisan codelab-stats:websites` to find your website ID, `php artisan codelab-stats:stats` to check any report
-- Laravel 12 and 13, PHP 8.3+
+- Laravel 12 and 13, PHP 8.5+
 
 ## Installation
 

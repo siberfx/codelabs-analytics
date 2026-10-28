@@ -3,6 +3,16 @@
 All notable changes to `siberfx/codelab-stats` are documented here.
 This project follows [Semantic Versioning](https://semver.org).
 
+## [1.3.0] - 2026-10-28
+
+### Removed
+
+- **Breaking:** PHP 8.3 and 8.4 support. The package now requires PHP 8.5 or later, and CI runs on 8.5 only.
+
+### Changed
+
+- Updated dependencies to their latest versions within the supported ranges (`laravel/framework` 13.39, `orchestra/testbench-core` 11.6).
+
 ## [1.2.0] - 2026-09-24
 
 ### Added
